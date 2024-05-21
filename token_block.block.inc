@@ -18,7 +18,24 @@ class TokenBlock extends Block {
    * {@inheritdoc}
    */
   function getTitle() {
-    return !empty($this->settings['title']) ? check_plain($this->settings['title']) : t('Token block');
+    $entity_type = $this->childDelta;
+    if (!empty($this->settings['title'])) {
+      if (empty($this->contexts[$entity_type]->data)) {
+        $title = $this->settings['title'];
+      }
+      else {
+        $data = array($entity_type => $this->contexts[$entity_type]->data);
+        // Sanitization is done later, so that we can remove markup first.
+        $replaced = token_replace($this->settings['title'], $data, array('sanitize' => FALSE));
+        // Remove any markup, as block titles are not supposed to use any.
+        $title = strip_tags($replaced);
+      }
+      // Perform check_plain, since it's not done by token_replace.
+      return check_plain($title);
+    }
+    else {
+      return t('Token block');
+    }
   }
 
   /**
